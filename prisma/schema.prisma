@@ -1,0 +1,198 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model administrator {
+  id         Int        @id @default(autoincrement())
+  name       String
+  surname    String
+  email      String     @unique
+  username   String?
+  password   String
+  resettoken String?
+  status     String     @default("ACTIVE")
+  roleId     Int
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  role       role       @relation(fields: [roleId], references: [id])
+  loginlogs  loginlog[]
+  reports report[]
+}
+
+model role {
+  id                   Int                        @id @default(autoincrement())
+  name                 String
+  status               String                     @default("ACTIVE")
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+  administrators       administrator[]
+  systemrolemodules    systemmodulesonroles[]
+  systemrolesubmodules systemsubmodulesonroles[]
+  systempermissions    systempermissionsonroles[]
+}
+
+model systemmodule {
+  id               Int                    @id @default(autoincrement())
+  name             String
+  icon             String
+  description      String?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  roles            systemmodulesonroles[]
+  systemsubmodules systemsubmodule[]
+}
+
+model systemmodulesonroles {
+  role           role         @relation(fields: [roleId], references: [id])
+  roleId         Int
+  systemmodule   systemmodule @relation(fields: [systemmoduleId], references: [id])
+  systemmoduleId Int
+  assignedAt     DateTime     @default(now())
+  assignedBy     Int
+
+  @@id([roleId, systemmoduleId])
+}
+
+model systemsubmodule {
+  id                   Int                       @id @default(autoincrement())
+  systemmoduleId       Int
+  name                 String
+  icon                 String
+  url                  String                    @unique
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  systemmodule         systemmodule              @relation(fields: [systemmoduleId], references: [id])
+  systemsubmoduleroles systemsubmodulesonroles[]
+  systempermissions    systempermission[]
+}
+
+model systemsubmodulesonroles {
+  role              role            @relation(fields: [roleId], references: [id])
+  roleId            Int
+  systemsubmodule   systemsubmodule @relation(fields: [systemsubmoduleId], references: [id])
+  systemsubmoduleId Int
+  assignedAt        DateTime        @default(now())
+  assignedBy        Int
+
+  @@id([roleId, systemsubmoduleId])
+}
+
+model systempermission {
+  id                    Int                        @id @default(autoincrement())
+  systemsubmoduleId     Int
+  name                  String                     @unique
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  systemsubmodule       systemsubmodule            @relation(fields: [systemsubmoduleId], references: [id])
+  systempermissionroles systempermissionsonroles[]
+}
+
+model systempermissionsonroles {
+  role               role             @relation(fields: [roleId], references: [id])
+  roleId             Int
+  systempermission   systempermission @relation(fields: [systempermissionId], references: [id])
+  systempermissionId Int
+  assignedAt         DateTime         @default(now())
+  assignedBy         Int
+
+  @@id([roleId, systempermissionId])
+}
+
+model loginlog {
+  id              Int           @id @default(autoincrement())
+  administratorId Int
+  token           String
+  ipaddress       String?
+  device          String?
+  browser         String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  administrator   administrator @relation(fields: [administratorId], references: [id])
+  systemaudits    systemaudit[]
+}
+
+model systemaudit {
+  id         Int      @id @default(autoincrement())
+  loginlogId Int
+  subject    String
+  old        String?  @db.Text
+  new        String?  @db.Text
+  action     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  loginlog   loginlog @relation(fields: [loginlogId], references: [id])
+}
+
+model service {
+  id        Int      @id @default(autoincrement())
+  name      String
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  types     type[]
+  reports report[]
+}
+
+model type {
+  id        Int       @id @default(autoincrement())
+  serviceId Int
+  name      String
+  status    String    @default("ACTIVE")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  service   service   @relation(fields: [serviceId], references: [id])
+  products  product[]
+  reports report[]
+}
+
+model product {
+  id        Int      @id @default(autoincrement())
+  typeId    Int
+  name      String
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  type      type     @relation(fields: [typeId], references: [id])
+  reports report[]
+}
+
+model report {
+  id              Int      @id @default(autoincrement())
+  name            String
+  gender          String
+  maritalstatus   String
+  phonenumber     String?
+  email           String?
+  province        String
+  district        String
+  city            String?
+  location        String?
+  serviceId       Int
+  typeId          Int
+  productId       Int
+  administratorId Int
+  frequeny        String?
+  issue           String
+  age             String?
+  reference       String
+  knowledge       String?
+  mode            String
+  starttim        String
+  endttime        String
+  calldate        String
+  created_at      DateTime @default(now())
+  update_at       DateTime @updatedAt
+  status          String?
+  product product @relation(fields: [productId], references: [id])
+  type  type @relation(fields: [typeId],references: [id])
+  service service @relation(fields: [serviceId],references: [id])
+  user administrator @relation(fields: [administratorId],references: [id])
+}
