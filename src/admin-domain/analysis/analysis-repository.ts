@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { FilterDto } from "./dto/filter.dto";
+import * as moment from 'moment'
 
 @Injectable()
 export class AnalysisRepository {
@@ -23,11 +24,12 @@ export class AnalysisRepository {
     }
 
     async filterbyDate(dto:FilterDto){
+        const startdate = moment(dto.startdate).format()
         return await this.prisma.report.findMany({
             where:{
-               calldate:{
-                    lte:dto.startdate,
-                    gte:dto.enddate
+               created_at:{
+                    gte:new Date(dto.startdate),
+                    lte:new Date(dto.enddate)
                 }
             },
             include:{
