@@ -13,7 +13,7 @@ export class AdminAuthService {
     constructor(private securityHelper:SecurityHelper,private authenicationHelper:AuthenticationHelper,private administratorRepository:AdministratorRepository,private systemauditService:SystemauditService){}
 
     async SignIn(adminAuthDto:AdminAuthDto,req:Request){
-        const user = await this.administratorRepository.getAdministratorByEmail(adminAuthDto.email)
+        const user = await this.administratorRepository.getAdministratorByUsername(adminAuthDto.username)
         if(!user){
             throw new UnauthorizedException("Invalid login details")
         }

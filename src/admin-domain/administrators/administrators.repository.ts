@@ -25,6 +25,12 @@ export class AdministratorRepository{
     return this.prisma.administrator.findMany({select:{id:true,name:true,surname:true,email:true,status:true,role:true,loginlogs:true}})
    }
 
+   async getAdministratorByUsername(username:string){
+    return this.prisma.administrator.findFirst({where:{
+        username:username
+    }})
+   }
+
    async getAdministratorByEmail(email:string){
     return this.prisma.administrator.findUnique({where:{
         email:email
@@ -47,7 +53,7 @@ export class AdministratorRepository{
    }
 
    async addAdministrator(creatreAdministratorDto:CreateAdministratorDto,user:any){
-    const {email,name,surname,roleId} = creatreAdministratorDto
+    const {email,name,surname,roleId,username} = creatreAdministratorDto
        const checkuser = await this.getAdministratorByEmail(creatreAdministratorDto.email)
        if(checkuser){
         throw new BadRequestException("Email already exists")
@@ -58,7 +64,8 @@ export class AdministratorRepository{
        const newrecord = await this.prisma.administrator.create({
                                         data:{
                                         name:name,  
-                                        surname:surname,
+                                        surname:surname, 
+                                        username:username,
                                         email:email,
                                         password:hashedpassword,
                                         roleId:+roleId
@@ -78,6 +85,7 @@ export class AdministratorRepository{
                                 surname:updateAdministratorDto.surname,
                                 email:updateAdministratorDto.email,
                                 roleId:+updateAdministratorDto.roleId,
+                                username:updateAdministratorDto.username,
                                 status:updateAdministratorDto.status
                             }
                         })
